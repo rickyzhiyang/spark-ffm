@@ -17,7 +17,7 @@ object TestFFM extends App {
     val data= sc.textFile(args(0)).map(_.split("\\s")).map(x => {
       val y = if(x(0).toInt > 0 ) 1.0 else -1.0
       val nodeArray: Array[(Int, Int, Double)] = x.drop(1).map(_.split(":")).map(x => {
-        (x(0).toInt, x(1).toInt, x(2).toDouble)
+        (x(0).toInt - 1, x(1).toInt - 1, x(2).toDouble)
       })
       (y, nodeArray)
     }).repartition(4)
@@ -26,8 +26,8 @@ object TestFFM extends App {
 
     //sometimes the max feature/field number would be different in training/testing dataset,
     // so use the whole dataset to get the max feature/field number
-    val m = data.flatMap(x=>x._2).map(_._1).collect.reduceLeft(_ max _) //+ 1
-    val n = data.flatMap(x=>x._2).map(_._2).collect.reduceLeft(_ max _) //+ 1
+    val m = data.flatMap(x=>x._2).map(_._1).collect.reduceLeft(_ max _) + 1
+    val n = data.flatMap(x=>x._2).map(_._2).collect.reduceLeft(_ max _) + 1
 
     val ffm: FFMModel = FFMWithAdag.train(training, m, n, dim = (args(6).toBoolean, args(7).toBoolean, args(1).toInt), n_iters = args(2).toInt,
       eta = args(3).toDouble, regParam = (args(4).toDouble, args(5).toDouble), normalization = false, false, "adagrad")
