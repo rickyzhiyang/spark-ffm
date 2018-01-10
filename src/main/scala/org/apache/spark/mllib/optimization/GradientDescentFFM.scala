@@ -143,8 +143,17 @@ object GradientDescentFFM {
     println(s"reg para is : ${regParam}")
     while (!converged && i < numIterations) {
       val bcWeights = data.context.broadcast(weights)
+      val count = data.count()
       // Sample a subset (fraction miniBatchFraction) of the total data
       // compute and sum up the subgradients on this subset (this is one map-reduce)
+      val lossValue = data.treeAggregate(0.0)(
+        seqOp = (c, v) => {
+          gradient.asInstanceOf[FFMGradient].computeLoss(v._1, v._2, Vectors.fromBreeze(BDV(bcWeights.value.toArray)))
+        },
+        combOp = (c1, c2) => {
+          c1 + c2
+        })
+      println("loss value is :" + lossValue / count)
 
       val (wSum, lSum) = data.treeAggregate(BDV(bcWeights.value.toArray), 0.0)(
         seqOp = (c, v) => {

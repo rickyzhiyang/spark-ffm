@@ -300,6 +300,15 @@ class FFMGradient(m: Int, n: Int, dim: (Boolean, Boolean, Int), sgd: Boolean = t
   override def compute(data: Vector, label: Double, weights: Vector, cumGradient: Vector): Double = {
     throw new Exception("This part is merged into computeFFM()")
   }
+
+  def computeLoss(label: Double, data2: Array[(Int, Int, Double)], weights: Vector): Double = {
+    val weightsArray: Array[Double] = weights.asInstanceOf[DenseVector].values
+    val t = predict(data2, weightsArray, 1.0)
+    val expnyt = math.exp(-label * t)
+    val tr_loss = math.log(1 + expnyt)
+    tr_loss
+  }
+
   def computeFFM(label: Double, data2: Array[(Int, Int, Double)], weights: Vector,
                  r: Double = 1.0, eta: Double, regParam: (Double, Double),
                  do_update: Boolean, iter: Int, solver: Boolean = true): (BDV[Double], Double) = {
